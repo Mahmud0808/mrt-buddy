@@ -2,9 +2,8 @@ package net.adhikary.mrtbuddy.ui.screens.farecalculator
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -13,14 +12,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.collectLatest
+import mrtbuddy.composeapp.generated.resources.Res
+import mrtbuddy.composeapp.generated.resources.fare
 import net.adhikary.mrtbuddy.model.CardState
+import net.adhikary.mrtbuddy.ui.components.LiftingHeader
 import net.adhikary.mrtbuddy.ui.screens.components.FareDisplayCard
 import net.adhikary.mrtbuddy.ui.screens.components.StationSelectionSection
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
 fun FareCalculatorScreen(
     modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = PaddingValues(0.dp),
     viewModel: FareCalculatorViewModel = koinViewModel(),
     cardState: CardState
 ) {
@@ -47,16 +51,24 @@ fun FareCalculatorScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .then(modifier),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        FareDisplayCard(uiState.value, viewModel)
-        Spacer(modifier = Modifier.height(4.dp))
-        StationSelectionSection(uiState.value, viewModel)
+    Column(modifier = Modifier.fillMaxSize().then(modifier)) {
+        LiftingHeader(
+            title = stringResource(Res.string.fare),
+            lifted = false,
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    bottom = 16.dp + paddingValues.calculateBottomPadding(),
+                ),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            FareDisplayCard(uiState.value, viewModel)
+            StationSelectionSection(uiState.value, viewModel)
+        }
     }
 }

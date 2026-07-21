@@ -1,17 +1,27 @@
-import androidx.compose.foundation.layout.Arrangement
+package net.adhikary.mrtbuddy.ui.screens.more
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,11 +29,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import kotlinx.coroutines.flow.collectLatest
 import mrtbuddy.composeapp.generated.resources.Res
 import mrtbuddy.composeapp.generated.resources.aboutHeader
@@ -39,7 +49,9 @@ import mrtbuddy.composeapp.generated.resources.help
 import mrtbuddy.composeapp.generated.resources.helpAndSupportButton
 import mrtbuddy.composeapp.generated.resources.language
 import mrtbuddy.composeapp.generated.resources.license
+import mrtbuddy.composeapp.generated.resources.more
 import mrtbuddy.composeapp.generated.resources.nonAffiliationDisclaimer
+import mrtbuddy.composeapp.generated.resources.open_in_new
 import mrtbuddy.composeapp.generated.resources.openSourceLicenses
 import mrtbuddy.composeapp.generated.resources.others
 import mrtbuddy.composeapp.generated.resources.policy
@@ -50,9 +62,11 @@ import mrtbuddy.composeapp.generated.resources.stationMap
 import mrtbuddy.composeapp.generated.resources.station_map
 import net.adhikary.mrtbuddy.Language
 import net.adhikary.mrtbuddy.settings.model.DarkThemeConfig
-import net.adhikary.mrtbuddy.ui.screens.more.MoreScreenAction
-import net.adhikary.mrtbuddy.ui.screens.more.MoreScreenEvent
-import net.adhikary.mrtbuddy.ui.screens.more.MoreScreenViewModel
+import net.adhikary.mrtbuddy.ui.components.BrandSelector
+import net.adhikary.mrtbuddy.ui.components.LiftingHeader
+import net.adhikary.mrtbuddy.ui.components.liquid.LiquidToggle
+import net.adhikary.mrtbuddy.ui.theme.MrtSpacing
+import net.adhikary.mrtbuddy.utils.LocalHapticManager
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -62,10 +76,13 @@ fun MoreScreen(
     onNavigateToStationMap: () -> Unit,
     onNavigateToLicenses: () -> Unit,
     modifier: Modifier = Modifier,
+    paddingValues: PaddingValues = PaddingValues(0.dp),
     viewModel: MoreScreenViewModel = koinViewModel()
 ) {
     val uriHandler = LocalUriHandler.current
     val uiState by viewModel.state.collectAsState()
+    val haptics = LocalHapticManager.current
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(Unit) {
         viewModel.onAction(MoreScreenAction.OnInit)
@@ -74,147 +91,176 @@ fun MoreScreen(
     LaunchedEffect(viewModel.events) {
         viewModel.events.collectLatest { event ->
             when (event) {
-                is MoreScreenEvent.Error -> {
-                    // Handle error event (e.g., show a Toast or Snackbar)
-                }
-                is MoreScreenEvent.NavigateTooStationMap -> {
-                    onNavigateToStationMap()
-                }
-                is MoreScreenEvent.NavigateToLicenses -> {
-                    onNavigateToLicenses()
-                }
+                is MoreScreenEvent.Error -> {}
+                is MoreScreenEvent.NavigateTooStationMap -> onNavigateToStationMap()
+                is MoreScreenEvent.NavigateToLicenses -> onNavigateToLicenses()
             }
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .then(modifier)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Top
-    ) {
-        Column {
+    val glassBackdrop = rememberLayerBackdrop()
+    Column(modifier = Modifier.fillMaxSize().then(modifier)) {
+        LiftingHeader(
+            title = stringResource(Res.string.more),
+            lifted = scrollState.canScrollBackward,
+        )
+        Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .layerBackdrop(glassBackdrop)
+                    .background(MaterialTheme.colorScheme.background),
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(
+                        start = MrtSpacing.screenPadding,
+                        end = MrtSpacing.screenPadding,
+                        bottom = MrtSpacing.screenPadding + paddingValues.calculateBottomPadding(),
+                    ),
+            ) {
             SectionHeader(text = stringResource(Res.string.settings))
-            RoundedButton(
-                text = stringResource(Res.string.autoSaveCardDetails),
-                subtitle = stringResource(Res.string.autoSaveCardDetailsDescription),
-                onClick = { },
-                trailing = {
-                    Switch(
-                        checked = uiState.autoSaveEnabled,
-                        onCheckedChange = { enabled ->
-                            viewModel.onAction(MoreScreenAction.SetAutoSave(enabled))
-                        }
-                    )
-                }
-            )
-            
-            RoundedButton(
-                text = stringResource(Res.string.language),
-                painter = painterResource(Res.drawable.language),
-                onClick = {
-                    if (uiState.currentLanguage == Language.English.isoFormat) {
-                        viewModel.onAction(MoreScreenAction.SetLanguage(Language.Bangla.isoFormat))
-                    } else {
-                        viewModel.onAction(MoreScreenAction.SetLanguage(Language.English.isoFormat))
-                    }
-                },
-                trailing = {
+        SectionCard {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(MrtSpacing.lg),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = if (uiState.currentLanguage == Language.English.isoFormat) "English" else "বাংলা",
-                        modifier = Modifier.padding(end = 8.dp)
+                        text = stringResource(Res.string.autoSaveCardDetails),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
-                })
-
-
-            RoundedButton(
-                text = stringResource(Res.string.dark_mode_preference),
-                painter = painterResource(Res.drawable.dark_mode),
-                onClick = {
-                    val currentConfig = uiState.darkThemeConfig
-                    val nextConfig = when (currentConfig) {
-                        DarkThemeConfig.FOLLOW_SYSTEM -> DarkThemeConfig.DARK
-                        DarkThemeConfig.DARK -> DarkThemeConfig.LIGHT
-                        DarkThemeConfig.LIGHT -> DarkThemeConfig.FOLLOW_SYSTEM
-                    }
-                    viewModel.onAction(MoreScreenAction.SetDarkThemeConfig(nextConfig))
-                },
-                trailing = {
                     Text(
-                        text = when (uiState.darkThemeConfig) {
-                            DarkThemeConfig.FOLLOW_SYSTEM -> stringResource(Res.string.dark_mode_config_system_default)
-                            DarkThemeConfig.DARK ->  stringResource(Res.string.dark_mode_config_dark)
-                            DarkThemeConfig.LIGHT ->  stringResource(Res.string.dark_mode_config_light)
-                        }, modifier = Modifier.padding(end = 8.dp)
+                        text = stringResource(Res.string.autoSaveCardDetailsDescription),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                })
-
-            SectionHeader(text = stringResource(Res.string.others))
-            RoundedButton(
-                text = stringResource(Res.string.stationMap),
-                painter = painterResource(Res.drawable.station_map),
-                onClick = {
-                    viewModel.onAction(MoreScreenAction.StationMap)
                 }
+                Spacer(modifier = Modifier.width(MrtSpacing.lg))
+                LiquidToggle(
+                    selected = { uiState.autoSaveEnabled },
+                    onSelect = { enabled ->
+                        haptics.tick()
+                        viewModel.onAction(MoreScreenAction.SetAutoSave(enabled))
+                    },
+                    backdrop = glassBackdrop,
+                )
+            }
+            SectionDivider()
+            ListItem(
+                headlineContent = { Text(stringResource(Res.string.language)) },
+                leadingContent = { SectionIcon(painterResource(Res.drawable.language)) },
+                supportingContent = {
+                    val languages = listOf(Language.English.isoFormat, Language.Bangla.isoFormat)
+                    BrandSelector(
+                        options = listOf("English", "বাংলা"),
+                        selectedIndex = languages.indexOf(uiState.currentLanguage).coerceAtLeast(0),
+                        onSelect = { index ->
+                            haptics.tick()
+                            viewModel.onAction(MoreScreenAction.SetLanguage(languages[index]))
+                        },
+                        modifier = Modifier.padding(top = MrtSpacing.sm),
+                        backdrop = glassBackdrop,
+                    )
+                },
+                colors = sectionListItemColors(),
             )
-
-            SectionHeader(text = stringResource(Res.string.aboutHeader))
-            RoundedButton(
-                text = stringResource(Res.string.privacyPolicy),
-                painter = painterResource(Res.drawable.policy),
-                onClick = {
-                    uriHandler.openUri("https://mrtbuddy.com/privacy-policy")
-                }
-            )
-            RoundedButton(
-                text = stringResource(Res.string.helpAndSupportButton),
-                painter = painterResource(Res.drawable.help),
-                onClick = {
-                    uriHandler.openUri("https://mrtbuddy.com/support")
-                }
-            )
-            RoundedButton(
-                text = stringResource(Res.string.contributors),
-                painter = painterResource(Res.drawable.contributors),
-                onClick = {
-                    uriHandler.openUri("https://mrtbuddy.com/contributors.html")
-                }
-            )
-            RoundedButton(
-                text = stringResource(Res.string.openSourceLicenses),
-                painter = painterResource(Res.drawable.license), // Ensure you have a 'license' drawable
-                onClick = {
-                    viewModel.onAction(MoreScreenAction.OpenLicenses)
-                }
+            SectionDivider()
+            ListItem(
+                headlineContent = { Text(stringResource(Res.string.dark_mode_preference)) },
+                leadingContent = { SectionIcon(painterResource(Res.drawable.dark_mode)) },
+                supportingContent = {
+                    val configs = listOf(
+                        DarkThemeConfig.FOLLOW_SYSTEM,
+                        DarkThemeConfig.LIGHT,
+                        DarkThemeConfig.DARK,
+                    )
+                    BrandSelector(
+                        options = listOf(
+                            stringResource(Res.string.dark_mode_config_system_default),
+                            stringResource(Res.string.dark_mode_config_light),
+                            stringResource(Res.string.dark_mode_config_dark),
+                        ),
+                        selectedIndex = configs.indexOf(uiState.darkThemeConfig).coerceAtLeast(0),
+                        onSelect = { index ->
+                            haptics.tick()
+                            viewModel.onAction(MoreScreenAction.SetDarkThemeConfig(configs[index]))
+                        },
+                        modifier = Modifier.padding(top = MrtSpacing.sm),
+                        backdrop = glassBackdrop,
+                    )
+                },
+                colors = sectionListItemColors(),
             )
         }
 
-        Column {
-            Text(
-                text = stringResource(Res.string.nonAffiliationDisclaimer),
-                fontSize = 12.sp,
-                lineHeight = 16.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                modifier = Modifier.padding(vertical = 8.dp)
+        SectionHeader(text = stringResource(Res.string.others))
+        SectionCard {
+            NavigationRow(
+                text = stringResource(Res.string.stationMap),
+                painter = painterResource(Res.drawable.station_map),
+                onClick = {
+                    haptics.tick()
+                    viewModel.onAction(MoreScreenAction.StationMap)
+                },
             )
+        }
 
-            Text(
-                text = stringResource(Res.string.readOnlyDisclaimer),
-                fontSize = 12.sp,
-                lineHeight = 16.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                modifier = Modifier.padding(vertical = 8.dp)
+        SectionHeader(text = stringResource(Res.string.aboutHeader))
+        SectionCard {
+            ExternalLinkRow(
+                text = stringResource(Res.string.privacyPolicy),
+                painter = painterResource(Res.drawable.policy),
+                onClick = { uriHandler.openUri("https://mrtbuddy.com/privacy-policy") },
             )
+            SectionDivider()
+            ExternalLinkRow(
+                text = stringResource(Res.string.helpAndSupportButton),
+                painter = painterResource(Res.drawable.help),
+                onClick = { uriHandler.openUri("https://mrtbuddy.com/support") },
+            )
+            SectionDivider()
+            ExternalLinkRow(
+                text = stringResource(Res.string.contributors),
+                painter = painterResource(Res.drawable.contributors),
+                onClick = { uriHandler.openUri("https://mrtbuddy.com/contributors.html") },
+            )
+            SectionDivider()
+            NavigationRow(
+                text = stringResource(Res.string.openSourceLicenses),
+                painter = painterResource(Res.drawable.license),
+                onClick = {
+                    haptics.tick()
+                    viewModel.onAction(MoreScreenAction.OpenLicenses)
+                },
+            )
+        }
 
+        Spacer(modifier = Modifier.height(MrtSpacing.lg))
+        Text(
+            text = stringResource(Res.string.nonAffiliationDisclaimer),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(vertical = MrtSpacing.sm),
+        )
+        Text(
+            text = stringResource(Res.string.readOnlyDisclaimer),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(vertical = MrtSpacing.sm),
+        )
             Text(
                 text = "Copyright © 2025 Aniruddha Adhikary.",
-                fontSize = 12.sp,
-                lineHeight = 16.sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                modifier = Modifier.padding(bottom = 8.dp)
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = MrtSpacing.sm),
             )
+            }
         }
     }
 }
@@ -223,70 +269,97 @@ fun MoreScreen(
 private fun SectionHeader(text: String) {
     Text(
         text = text,
-        fontSize = 14.sp,
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-        modifier = Modifier.padding(vertical = 8.dp)
+        style = MaterialTheme.typography.labelLarge,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = MrtSpacing.lg, top = MrtSpacing.lg, bottom = MrtSpacing.sm),
     )
 }
 
 @Composable
-private fun RoundedButton(
+private fun SectionCard(content: @Composable () -> Unit) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Column {
+            content()
+        }
+    }
+}
+
+@Composable
+private fun SectionDivider() {
+    HorizontalDivider(
+        modifier = Modifier.padding(start = 56.dp),
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+    )
+}
+
+@Composable
+private fun sectionListItemColors() = ListItemDefaults.colors(
+    containerColor = MaterialTheme.colorScheme.surfaceContainer,
+)
+
+@Composable
+private fun SectionIcon(painter: Painter) {
+    Icon(
+        painter = painter,
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.size(24.dp),
+    )
+}
+
+@Composable
+private fun NavigationRow(
     text: String,
-    subtitle: String? = null,
-    painter: Painter? = null,
-    iconTint: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+    painter: Painter,
     onClick: () -> Unit,
-    trailing: @Composable (() -> Unit)? = null
 ) {
     Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-        contentColor = MaterialTheme.colorScheme.onSurface,
-        onClick = onClick
+        onClick = onClick,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = Modifier.fillMaxWidth(),
     ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                if (painter != null) {
-                    Icon(
-                        painter = painter,
-                        contentDescription = null,
-                        tint = iconTint,
-                        modifier = Modifier
-                            .padding(end = 16.dp)
-                            .size(24.dp)
-                    )
-                }
-                Column {
-                    Text(
-                        text = text,
-                        fontSize = 16.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    if (subtitle != null) {
-                        Text(
-                            text = subtitle,
-                            fontSize = 14.sp,
-                            lineHeight = 18.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                            modifier = Modifier.padding(top = 4.dp)
-                        )
-                    }
-                }
-            }
-            trailing?.invoke()
-        }
+        ListItem(
+            headlineContent = { Text(text) },
+            leadingContent = { SectionIcon(painter) },
+            trailingContent = {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            },
+            colors = sectionListItemColors(),
+        )
+    }
+}
+
+@Composable
+private fun ExternalLinkRow(
+    text: String,
+    painter: Painter,
+    onClick: () -> Unit,
+) {
+    Surface(
+        onClick = onClick,
+        color = MaterialTheme.colorScheme.surfaceContainer,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        ListItem(
+            headlineContent = { Text(text) },
+            leadingContent = { SectionIcon(painter) },
+            trailingContent = {
+                Icon(
+                    painter = painterResource(Res.drawable.open_in_new),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp),
+                )
+            },
+            colors = sectionListItemColors(),
+        )
     }
 }

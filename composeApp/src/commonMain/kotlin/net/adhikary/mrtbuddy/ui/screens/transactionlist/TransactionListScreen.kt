@@ -1,7 +1,8 @@
 package net.adhikary.mrtbuddy.ui.screens.transactionlist
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,12 +21,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,26 +33,33 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.datetime.Instant
 import kotlinx.datetime.toLocalDateTime
 import mrtbuddy.composeapp.generated.resources.Res
+import mrtbuddy.composeapp.generated.resources.back
 import mrtbuddy.composeapp.generated.resources.balanceUpdate
 import mrtbuddy.composeapp.generated.resources.endOfTransactionHistory
 import mrtbuddy.composeapp.generated.resources.errorLoadingTransactions
+import mrtbuddy.composeapp.generated.resources.exportCsv
 import mrtbuddy.composeapp.generated.resources.exportError
 import mrtbuddy.composeapp.generated.resources.exportingTransactions
 import mrtbuddy.composeapp.generated.resources.noTransactionsFound
@@ -66,10 +72,13 @@ import net.adhikary.mrtbuddy.model.TransactionType
 import net.adhikary.mrtbuddy.nfc.service.StationService
 import net.adhikary.mrtbuddy.nfc.service.TimestampService
 import net.adhikary.mrtbuddy.translateNumber
-import net.adhikary.mrtbuddy.ui.theme.DarkNegativeRed
-import net.adhikary.mrtbuddy.ui.theme.DarkPositiveGreen
-import net.adhikary.mrtbuddy.ui.theme.LightNegativeRed
-import net.adhikary.mrtbuddy.ui.theme.LightPositiveGreen
+import net.adhikary.mrtbuddy.ui.components.EmptyState
+import net.adhikary.mrtbuddy.ui.components.SkeletonTransactionRow
+import net.adhikary.mrtbuddy.ui.theme.MrtMotion
+import net.adhikary.mrtbuddy.ui.theme.MrtSpacing
+import net.adhikary.mrtbuddy.ui.theme.mrtColors
+import net.adhikary.mrtbuddy.ui.theme.tabular
+import net.adhikary.mrtbuddy.utils.LocalHapticManager
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -89,41 +98,57 @@ fun TransactionListScreen(
 
     val state = viewModel.state.collectAsState().value
     val lazyListState = rememberLazyListState()
+    val haptics = LocalHapticManager.current
 
-    // Monitor scroll position to trigger loading more
     LaunchedEffect(lazyListState) {
         snapshotFlow {
             val layoutInfo = lazyListState.layoutInfo
             val totalItems = layoutInfo.totalItemsCount
             val lastVisibleItemIndex = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-
-            // Load more when we're 5 items from the bottom
             lastVisibleItemIndex >= (totalItems - 5) && totalItems > 0
         }
-        .distinctUntilChanged()
-        .collect { shouldLoadMore ->
-            if (shouldLoadMore) {
-                viewModel.loadMoreTransactions()
+            .distinctUntilChanged()
+            .collect { shouldLoadMore ->
+                if (shouldLoadMore) {
+                    viewModel.loadMoreTransactions()
+                }
             }
+    }
+
+    val wasExporting = remember { mutableStateOf(false) }
+    LaunchedEffect(state.isExporting, state.exportError) {
+        if (wasExporting.value && !state.isExporting) {
+            if (state.exportError == null) haptics.success() else haptics.error()
         }
+        wasExporting.value = state.isExporting
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
-            // Top app bar with card info
             TopAppBar(
                 title = {
-                    val cardName = state.cardName?.takeIf { it.isNotBlank() } ?: stringResource(Res.string.unnamedCard)
-                    val balanceText = state.balance?.let { " (৳ ${translateNumber(it)})" } ?: ""
-                    Text("$cardName$balanceText")
+                    Column {
+                        Text(
+                            text = state.cardName?.takeIf { it.isNotBlank() }
+                                ?: stringResource(Res.string.unnamedCard),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        state.balance?.let { balance ->
+                            Text(
+                                text = "৳ ${translateNumber(balance)}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(Res.string.back)
                         )
                     }
                 },
@@ -132,7 +157,6 @@ fun TransactionListScreen(
                 ),
                 windowInsets = WindowInsets.statusBars,
                 actions = {
-                    // Export button
                     IconButton(
                         onClick = { viewModel.exportTransactions() },
                         enabled = !state.isExporting && state.transactions.isNotEmpty()
@@ -145,43 +169,37 @@ fun TransactionListScreen(
                         } else {
                             Icon(
                                 imageVector = Icons.Default.Share,
-                                contentDescription = "Export CSV"
+                                contentDescription = stringResource(Res.string.exportCsv)
                             )
                         }
-                    }
-                    // Refresh button
-                    IconButton(onClick = { viewModel.refresh() }) {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Refresh"
-                        )
                     }
                 }
             )
 
-            // Main content
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
             ) {
                 when {
-                    // Initial loading
                     state.isLoading && state.transactions.isEmpty() -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(MrtSpacing.xl),
+                            verticalArrangement = Arrangement.spacedBy(MrtSpacing.sm),
                         ) {
-                            CircularProgressIndicator()
+                            repeat(8) {
+                                SkeletonTransactionRow()
+                            }
                         }
                     }
 
-                    // Error with empty list
                     state.error != null && state.transactions.isEmpty() -> {
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(32.dp),
+                                .padding(MrtSpacing.xxl),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
@@ -191,66 +209,55 @@ fun TransactionListScreen(
                                 modifier = Modifier.size(48.dp),
                                 tint = MaterialTheme.colorScheme.error
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(MrtSpacing.lg))
                             Text(
                                 text = state.error ?: stringResource(Res.string.errorLoadingTransactions),
                                 style = MaterialTheme.typography.bodyLarge,
                                 textAlign = TextAlign.Center
                             )
-                            Spacer(modifier = Modifier.height(24.dp))
+                            Spacer(modifier = Modifier.height(MrtSpacing.xl))
                             Button(onClick = { viewModel.retry() }) {
                                 Text(stringResource(Res.string.retry))
                             }
                         }
                     }
 
-                    // Empty transaction list
                     state.transactions.isEmpty() -> {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(24.dp)
                                 .padding(bottom = paddingValues.calculateBottomPadding()),
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally
-                            ) {
-                                Text(
-                                    text = stringResource(Res.string.noTransactionsFound),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    modifier = Modifier.padding(bottom = 8.dp)
-                                )
-                                Text(
-                                    text = stringResource(Res.string.transactionsAppearPrompt),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                    modifier = Modifier.padding(horizontal = 32.dp),
-                                    textAlign = TextAlign.Center
-                                )
-                            }
+                            EmptyState(
+                                title = stringResource(Res.string.noTransactionsFound),
+                                body = stringResource(Res.string.transactionsAppearPrompt),
+                            )
                         }
                     }
 
-                    // Transaction list
                     else -> {
-                        TransactionList(
-                            state = state,
-                            lazyListState = lazyListState,
-                            paddingValues = paddingValues,
-                            onRetry = { viewModel.retry() }
-                        )
+                        PullToRefreshBox(
+                            isRefreshing = state.isLoading && state.transactions.isNotEmpty(),
+                            onRefresh = { viewModel.refresh() },
+                            modifier = Modifier.fillMaxSize(),
+                        ) {
+                            TransactionList(
+                                state = state,
+                                lazyListState = lazyListState,
+                                paddingValues = paddingValues,
+                                onRetry = { viewModel.retry() }
+                            )
+                        }
                     }
                 }
             }
         }
 
-        // Export loading overlay
         if (state.isExporting) {
             ExportLoadingOverlay()
         }
 
-        // Export error dialog
         state.exportError?.let { error ->
             ExportErrorDialog(
                 errorMessage = error,
@@ -271,37 +278,34 @@ private fun TransactionList(
         state = lazyListState,
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
-            top = 24.dp,
-            start = 24.dp,
-            end = 24.dp,
-            bottom = 24.dp + paddingValues.calculateBottomPadding()
+            top = MrtSpacing.lg,
+            start = MrtSpacing.xl,
+            end = MrtSpacing.xl,
+            bottom = MrtSpacing.xl + paddingValues.calculateBottomPadding()
         ),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Transaction items with stable keys
         itemsIndexed(
             items = state.transactions,
             key = { _, transaction ->
-                // Use all fields including dateTime and order to ensure uniqueness
                 "${transaction.transactionEntity.cardIdm}_${transaction.transactionEntity.scanId}_${transaction.transactionEntity.fromStation}_${transaction.transactionEntity.toStation}_${transaction.transactionEntity.dateTime}_${transaction.transactionEntity.order}"
             }
         ) { index, transaction ->
-            TransactionItem(transaction)
-            if (index < state.transactions.size - 1) {
-                HorizontalDivider(
-                    modifier = Modifier.padding(top = 12.dp),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                )
+            Column(modifier = Modifier.animateItem()) {
+                TransactionItem(transaction)
+                if (index < state.transactions.size - 1) {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                    )
+                }
             }
         }
 
-        // Loading indicator at the bottom
         if (state.isLoadingMore) {
             item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(MrtSpacing.lg),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(
@@ -312,13 +316,12 @@ private fun TransactionList(
             }
         }
 
-        // Error indicator when loading more failed
         if (state.error != null && state.transactions.isNotEmpty()) {
             item {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(MrtSpacing.lg),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -327,7 +330,7 @@ private fun TransactionList(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(MrtSpacing.sm))
                     TextButton(onClick = onRetry) {
                         Text(stringResource(Res.string.retry))
                     }
@@ -335,17 +338,16 @@ private fun TransactionList(
             }
         }
 
-        // End of list indicator
         if (!state.canLoadMore && !state.isLoadingMore && state.transactions.isNotEmpty()) {
             item {
                 Text(
                     text = stringResource(Res.string.endOfTransactionHistory),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(MrtSpacing.lg),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -354,13 +356,10 @@ private fun TransactionList(
 
 @Composable
 fun TransactionItem(trxEntity: TransactionEntityWithAmount) {
-    val transaction = trxEntity.transactionEntity;
-    val isDarkTheme = isSystemInDarkTheme()
-
-    val transactionType = TransactionType.fromHeader(trxEntity.transactionEntity.fixedHeader)
-
+    val transaction = trxEntity.transactionEntity
+    val transactionType = TransactionType.fromHeader(transaction.fixedHeader)
     val amountText = if (trxEntity.amount != null) {
-        "৳ ${translateNumber(trxEntity.amount)}"
+        if (trxEntity.amount > 0) "+৳ ${translateNumber(trxEntity.amount)}" else "৳ ${translateNumber(trxEntity.amount)}"
     } else {
         "N/A"
     }
@@ -372,14 +371,14 @@ fun TransactionItem(trxEntity: TransactionEntityWithAmount) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 4.dp, bottom = 8.dp),
+            .padding(vertical = MrtSpacing.md)
+            .semantics(mergeDescendants = true) {},
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Bottom
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Column(
             modifier = Modifier.weight(1f),
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.spacedBy(MrtSpacing.xs),
         ) {
             Text(
                 text = when (transactionType) {
@@ -388,60 +387,56 @@ fun TransactionItem(trxEntity: TransactionEntityWithAmount) {
                         StationService.translate(transaction.toStation)
                     }"
                 },
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = dateTimeFormatted,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        Column(
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(start = 8.dp)
-        ) {
-            val amountColor = when {
+        Text(
+            text = amountText,
+            style = MaterialTheme.typography.titleMedium.tabular,
+            color = when {
                 trxEntity.amount == null -> MaterialTheme.colorScheme.onSurface
-                trxEntity.amount > 0 -> if (isDarkTheme) DarkPositiveGreen else LightPositiveGreen
-                else -> if (isDarkTheme) DarkNegativeRed else LightNegativeRed
-            }
-
-            Text(
-                text = amountText,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = amountColor
-            )
-        }
+                trxEntity.amount > 0 -> MaterialTheme.mrtColors.positive
+                else -> MaterialTheme.mrtColors.negative
+            },
+            modifier = Modifier.padding(start = MrtSpacing.sm),
+        )
     }
 }
 
 @Composable
 private fun ExportLoadingOverlay() {
+    val scrimAlpha by animateFloatAsState(
+        targetValue = 0.5f,
+        animationSpec = tween(MrtMotion.Short4),
+    )
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.5f)),
+            .background(MaterialTheme.colorScheme.scrim.copy(alpha = scrimAlpha)),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            modifier = Modifier
-                .background(
-                    color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(16.dp)
-                )
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        Surface(
+            shape = MaterialTheme.shapes.extraLarge,
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            tonalElevation = 6.dp,
         ) {
-            CircularProgressIndicator()
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = stringResource(Res.string.exportingTransactions),
-                style = MaterialTheme.typography.bodyLarge
-            )
+            Column(
+                modifier = Modifier.padding(MrtSpacing.xxl),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(MrtSpacing.lg))
+                Text(
+                    text = stringResource(Res.string.exportingTransactions),
+                    style = MaterialTheme.typography.bodyLarge
+                )
+            }
         }
     }
 }
@@ -453,10 +448,11 @@ private fun ExportErrorDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        shape = MaterialTheme.shapes.large,
         title = { Text(stringResource(Res.string.exportError)) },
         text = { Text(errorMessage) },
         confirmButton = {
-            TextButton(onClick = onDismiss) {
+            Button(onClick = onDismiss) {
                 Text(stringResource(Res.string.ok))
             }
         }

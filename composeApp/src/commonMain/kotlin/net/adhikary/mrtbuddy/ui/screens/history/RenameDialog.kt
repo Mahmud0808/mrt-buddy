@@ -2,8 +2,9 @@ package net.adhikary.mrtbuddy.ui.screens.history
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,7 +49,7 @@ fun RenameDialog(
             )
         },
         confirmButton = {
-            TextButton(
+            Button(
                 onClick = {
                     onConfirm(newName)
                     onDismiss()
@@ -58,7 +59,7 @@ fun RenameDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            OutlinedButton(onClick = onDismiss) {
                 Text(stringResource(Res.string.cancel))
             }
         }

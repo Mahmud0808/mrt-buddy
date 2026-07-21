@@ -7,7 +7,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class FareCalculatorTest {
-    private val calculator = FareCalculator.getInstance()
+    private val calculator = FareCalculator
 
     @Test
     fun testStationList() {

@@ -101,7 +101,7 @@
     <!-- Settings screen -->
     <string name="settings">সেটিংস</string>
     <string name="dark_mode_preference">ডার্ক থিম</string>
-    <string name="dark_mode_config_system_default">সিস্টেম ডিফল্ট</string>
+    <string name="dark_mode_config_system_default">সিস্টেম</string>
     <string name="dark_mode_config_dark">ডার্ক</string>
     <string name="dark_mode_config_light">লাইট</string>
     <string name="autoSaveCardDetails">স্বয়ংক্রিয় কার্ড সংরক্ষণ</string>
@@ -131,4 +131,36 @@
     <string name="exportingTransactions">লেনদেন এক্সপোর্ট হচ্ছে...</string>
     <string name="exportError">এক্সপোর্ট ব্যর্থ হয়েছে</string>
     <string name="ok">ঠিক আছে</string>
+
+    <!-- Redesign strings -->
+    <string name="howItWorks">যেভাবে কাজ করে</string>
+    <string name="eduStepScan">ফোনের পেছনে আপনার কার্ডটি ধরুন</string>
+    <string name="eduStepBalance">সাথে সাথে ব্যালেন্স ও সাম্প্রতিক ভ্রমণ দেখুন</string>
+    <string name="eduStepFare">ইন্টারনেট ছাড়াই স্টেশনের ভাড়া হিসাব করুন</string>
+    <string name="swapStations">শুরু ও গন্তব্য অদলবদল করুন</string>
+    <string name="searchStation">স্টেশন খুঁজুন</string>
+    <string name="mrtLine6">এমআরটি লাইন ৬</string>
+    <string name="fromStation">হতে</string>
+    <string name="toStation">পর্যন্ত</string>
+    <string name="cardOptions">কার্ড অপশন</string>
+    <string name="toggleCardIdVisibility">কার্ড আইডি দেখান বা লুকান</string>
+    <string name="staleScan">পুরনো তথ্য</string>
+    <string name="errorTitle">কিছু একটা সমস্যা হয়েছে</string>
+    <string name="lowBalanceWarning">ব্যালেন্স কম</string>
+    <string name="mrtPass">এমআরটি পাস</string>
+    <string name="rapidPass">র‍্যাপিড পাস</string>
+    <string name="refresh">রিফ্রেশ</string>
+    <string name="exportCsv">সিএসভি এক্সপোর্ট</string>
+    <string name="back">ফিরে যান</string>
+
+    <!-- Onboarding -->
+    <string name="onboardingWelcomeTitle">এমআরটি বাডিতে স্বাগতম</string>
+    <string name="onboardingWelcomeBody">ঢাকা মেট্রোর সঙ্গী — ব্যালেন্স, যাত্রা ও ভাড়া এক জায়গায়</string>
+    <string name="onboardingScanTitle">ট্যাপ করুন। স্ক্যান করুন। শেষ।</string>
+    <string name="onboardingScanBody">ব্যালেন্স জানতে ফোনের পেছনে আপনার এমআরটি বা র‍্যাপিড পাস ধরুন</string>
+    <string name="onboardingOfflineTitle">সম্পূর্ণ অফলাইনে কাজ করে</string>
+    <string name="onboardingOfflineBody">ভাড়া ক্যালকুলেটর, যাত্রার ইতিহাস ও স্টেশন ম্যাপ — ইন্টারনেট লাগে না</string>
+    <string name="next">পরবর্তী</string>
+    <string name="skip">এড়িয়ে যান</string>
+    <string name="getStarted">শুরু করুন</string>
 </resources>

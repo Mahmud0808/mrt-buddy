@@ -27,6 +27,14 @@ class SettingsRepository(private val settings: Settings) {
     )
     val darkThemeConfig: StateFlow<DarkThemeConfig> = _darkThemeConfig.asStateFlow()
 
+    private val _onboardingDone = MutableStateFlow(settings.getBoolean(ONBOARDING_DONE_KEY, false))
+    val onboardingDone: StateFlow<Boolean> = _onboardingDone.asStateFlow()
+
+    fun setOnboardingDone() {
+        settings.putBoolean(ONBOARDING_DONE_KEY, true)
+        _onboardingDone.value = true
+    }
+
     fun setAutoSave(enabled: Boolean) {
         settings.putBoolean(AUTO_SAVE_KEY, enabled)
         _autoSaveEnabled.value = enabled
@@ -47,5 +55,6 @@ class SettingsRepository(private val settings: Settings) {
         private const val AUTO_SAVE_KEY = "auto_save_enabled"
         private const val LANGUAGE_KEY = "app_language"
         private const val DARK_THEME_CONFIG_KEY = "dark_theme_config"
+        private const val ONBOARDING_DONE_KEY = "onboarding_done"
     }
 }

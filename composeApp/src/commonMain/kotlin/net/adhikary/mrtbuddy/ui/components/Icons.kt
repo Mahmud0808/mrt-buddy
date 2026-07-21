@@ -10,33 +10,33 @@ import mrtbuddy.composeapp.generated.resources.history
 import org.jetbrains.compose.resources.painterResource
 
 @Composable
-public fun CalculatorIcon() {
-    return Icon(
+fun CalculatorIcon() {
+    Icon(
         painter = painterResource(Res.drawable.calculate),
-        contentDescription = "Calculate"
+        contentDescription = null
     )
 }
 
 @Composable
-public fun CardIcon() {
-    return Icon(
+fun CardIcon() {
+    Icon(
         painter = painterResource(Res.drawable.card),
-        contentDescription = "Calculate"
+        contentDescription = null
     )
 }
 
 @Composable
-public fun AppsIcon() {
-    return Icon(
+fun AppsIcon() {
+    Icon(
         painter = painterResource(Res.drawable.apps),
-        contentDescription = "Apps"
+        contentDescription = null
     )
 }
 
 @Composable
-public fun HistoryIcon() {
-    return Icon(
+fun HistoryIcon() {
+    Icon(
         painter = painterResource(Res.drawable.history),
-        contentDescription = "Apps"
+        contentDescription = null
     )
 }

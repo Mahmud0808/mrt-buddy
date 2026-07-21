@@ -1,9 +1,12 @@
 package net.adhikary.mrtbuddy.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 
 val lightScheme = lightColorScheme(
     primary = primaryLight,
@@ -82,8 +85,24 @@ val darkScheme = darkColorScheme(
 )
 
 @Composable
+internal fun MrtThemeContent(
+    colorScheme: ColorScheme,
+    darkTheme: Boolean,
+    content: @Composable () -> Unit,
+) {
+    val mrtColors = if (darkTheme) DarkMrtColors else LightMrtColors
+    CompositionLocalProvider(LocalMrtColors provides mrtColors) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = mrtTypography(),
+            shapes = MrtShapes,
+            content = content,
+        )
+    }
+}
+
+@Composable
 expect fun MRTBuddyTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 )

@@ -1,38 +1,38 @@
 [versions]
-agp = "8.13.2"
-android-compileSdk = "35"
+agp = "9.3.0"
+android-compileSdk = "37"
 android-minSdk = "24"
-android-targetSdk = "35"
+android-targetSdk = "36"
 androidx-activityCompose = "1.9.3"
 androidx-appcompat = "1.7.0"
 androidx-constraintlayout = "2.2.0"
 androidx-core-ktx = "1.15.0"
 androidx-espresso-core = "3.6.1"
-androidx-lifecycle = "2.8.3"
+androidx-lifecycle = "2.10.0"
 androidx-material = "1.12.0"
 androidx-test-junit = "1.2.1"
-compose-multiplatform = "1.7.0"
-composeWebviewMultiplatform = "1.9.20"
+compose-multiplatform = "1.11.1"
 junit = "4.13.2"
-koinCore = "4.0.0"
-kotlin = "2.1.21"
+koinCore = "4.2.2"
+kotlin = "2.4.10"
 kotlinxDatetime = "0.6.0"
-kotlinxCoroutine = "1.9.0"
-androidx-room = "2.7.0-alpha12"
+kotlinxCoroutine = "1.11.0"
+androidx-room = "2.8.4"
 dependency-license-report = "2.9"
-ksp = "2.1.21-2.0.1"
-lifecycleViewmodelCompose = "2.8.2"
-multiplatformMarkdownRenderer = "0.27.0"
+ksp = "2.3.10"
+lifecycleViewmodelCompose = "2.10.0"
 multiplatformSettings = "1.2.0"
 multiplatformSettingsVersion = "1.2.0"
-navigationCompose = "2.8.0-alpha10"
-sqlite = "2.5.0-SNAPSHOT"
+navigationCompose = "2.9.2"
+sqlite = "2.7.0"
+backdrop = "2.0.0"
+kyantShapes = "1.2.0"
+materialIconsCore = "1.7.3"
 napier = "2.7.1"
 coilCompose = "3.0.4"
 zoomimageComposeCoil3 = "1.1.0-rc01"
 
 [libraries]
-compose-webview-multiplatform = { module = "io.github.kevinnzou:compose-webview-multiplatform", version.ref = "composeWebviewMultiplatform" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinCore" }
 koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koinCore" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koinCore" }
@@ -55,13 +55,15 @@ kotlinx-coroutine = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", 
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "androidx-room" }
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "androidx-room" }
 lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
-multiplatform-markdown-renderer = { module = "com.mikepenz:multiplatform-markdown-renderer", version.ref = "multiplatformMarkdownRenderer" }
 multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatformSettingsVersion" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCompose" }
 zoomimage-compose-coil3 = { module = "io.github.panpf.zoomimage:zoomimage-compose-coil3", version.ref = "zoomimageComposeCoil3" }
+backdrop = { module = "io.github.kyant0:backdrop", version.ref = "backdrop" }
+kyant-shapes = { module = "io.github.kyant0:shapes", version.ref = "kyantShapes" }
+material-icons-core = { module = "org.jetbrains.compose.material:material-icons-core", version.ref = "materialIconsCore" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

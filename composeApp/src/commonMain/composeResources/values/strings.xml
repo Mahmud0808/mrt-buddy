@@ -101,7 +101,7 @@
     <!-- Settings screen -->
     <string name="settings">Settings</string>
     <string name="dark_mode_preference">Dark Theme</string>
-    <string name="dark_mode_config_system_default">System Default</string>
+    <string name="dark_mode_config_system_default">System</string>
     <string name="dark_mode_config_dark">Dark</string>
     <string name="dark_mode_config_light">Light</string>
     <string name="autoSaveCardDetails">Auto-save card details</string>
@@ -131,4 +131,36 @@
     <string name="exportingTransactions">Exporting transactions...</string>
     <string name="exportError">Export failed</string>
     <string name="ok">OK</string>
+
+    <!-- Redesign strings -->
+    <string name="howItWorks">How it works</string>
+    <string name="eduStepScan">Hold your card against the back of your phone</string>
+    <string name="eduStepBalance">See your balance and recent journeys instantly</string>
+    <string name="eduStepFare">Plan fares between stations, fully offline</string>
+    <string name="swapStations">Swap origin and destination</string>
+    <string name="searchStation">Search station</string>
+    <string name="mrtLine6">MRT Line 6</string>
+    <string name="fromStation">From</string>
+    <string name="toStation">To</string>
+    <string name="cardOptions">Card options</string>
+    <string name="toggleCardIdVisibility">Show or hide card ID</string>
+    <string name="staleScan">Outdated</string>
+    <string name="errorTitle">Something went wrong</string>
+    <string name="lowBalanceWarning">Low balance</string>
+    <string name="mrtPass">MRT Pass</string>
+    <string name="rapidPass">Rapid Pass</string>
+    <string name="refresh">Refresh</string>
+    <string name="exportCsv">Export CSV</string>
+    <string name="back">Back</string>
+
+    <!-- Onboarding -->
+    <string name="onboardingWelcomeTitle">Welcome to MRT Buddy</string>
+    <string name="onboardingWelcomeBody">Your Dhaka Metro companion — balance, journeys and fares in one place</string>
+    <string name="onboardingScanTitle">Tap. Scan. Done.</string>
+    <string name="onboardingScanBody">Hold your MRT or Rapid Pass against the back of your phone to read the balance instantly</string>
+    <string name="onboardingOfflineTitle">Works fully offline</string>
+    <string name="onboardingOfflineBody">Fare calculator, journey history and the station map — no internet needed</string>
+    <string name="next">Next</string>
+    <string name="skip">Skip</string>
+    <string name="getStarted">Get Started</string>
 </resources>

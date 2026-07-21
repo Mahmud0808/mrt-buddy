@@ -1,6 +1,5 @@
 package net.adhikary.mrtbuddy.ui.components
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,19 +7,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.semantics
 import kotlinx.datetime.LocalDateTime
 import mrtbuddy.composeapp.generated.resources.Res
 import mrtbuddy.composeapp.generated.resources.balanceUpdate
@@ -30,58 +24,45 @@ import net.adhikary.mrtbuddy.model.TransactionWithAmount
 import net.adhikary.mrtbuddy.nfc.service.StationService
 import net.adhikary.mrtbuddy.nfc.service.TimestampService
 import net.adhikary.mrtbuddy.translateNumber
-import net.adhikary.mrtbuddy.ui.theme.DarkNegativeRed
-import net.adhikary.mrtbuddy.ui.theme.DarkPositiveGreen
-import net.adhikary.mrtbuddy.ui.theme.LightNegativeRed
-import net.adhikary.mrtbuddy.ui.theme.LightPositiveGreen
+import net.adhikary.mrtbuddy.ui.theme.MrtSpacing
+import net.adhikary.mrtbuddy.ui.theme.mrtColors
+import net.adhikary.mrtbuddy.ui.theme.tabular
 import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun TransactionHistoryList(transactions: List<TransactionWithAmount>) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
-        shape = RoundedCornerShape(24.dp)
+fun TransactionHistoryList(
+    transactions: List<TransactionWithAmount>,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(MrtSpacing.cardPadding),
         ) {
-            item {
-                Text(
-                    text = stringResource(Res.string.recentJourneys),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(top = 12.dp, bottom = 16.dp),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                )
-            }
-
+            Text(
+                text = stringResource(Res.string.recentJourneys),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(modifier = Modifier.height(MrtSpacing.sm))
             val validTransactions = transactions.filter { it.transaction.timestamp.year >= 2015 }
-
-            items(validTransactions) { transactionWithAmount ->
-                // FIXME: Hatirjheel charges 40 and then refunds the change (shows as balance update)
+            validTransactions.forEachIndexed { index, transactionWithAmount ->
                 TransactionItem(
                     type = TransactionType.fromHeader(transactionWithAmount.transaction.fixedHeader),
                     date = transactionWithAmount.transaction.timestamp,
                     fromStation = transactionWithAmount.transaction.fromStation,
                     toStation = transactionWithAmount.transaction.toStation,
                     balance = "৳ ${transactionWithAmount.transaction.balance}",
-                    amount = transactionWithAmount.amount?.let { "৳ ${translateNumber(it)}" }
-                        ?: "N/A",
-                    amountValue = transactionWithAmount.amount
+                    amount = transactionWithAmount.amount?.let { "৳ ${translateNumber(it)}" } ?: "N/A",
+                    amountValue = transactionWithAmount.amount,
                 )
-
-
-                if (transactionWithAmount != validTransactions.last()) {
-                    HorizontalDivider(
-                        modifier = Modifier.padding(top = 12.dp),
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                    )
+                if (index != validTransactions.lastIndex) {
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 }
             }
         }
@@ -98,53 +79,41 @@ fun TransactionItem(
     amount: String,
     amountValue: Int?
 ) {
-    val isDarkTheme = isSystemInDarkTheme()
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 4.dp, bottom = 8.dp),
+            .padding(vertical = MrtSpacing.md)
+            .semantics(mergeDescendants = true) {},
         horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.Bottom
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(
             modifier = Modifier.weight(1f),
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.Center,
+            verticalArrangement = Arrangement.spacedBy(MrtSpacing.xs),
         ) {
             Text(
                 text = when (type) {
                     TransactionType.BalanceUpdate -> stringResource(Res.string.balanceUpdate)
-                    else -> "${StationService.translate(fromStation)} → ${
-                        StationService.translate(toStation)
-                    }"
+                    else -> "${StationService.translate(fromStation)} → ${StationService.translate(toStation)}"
                 },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
             )
-            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = TimestampService.formatDateTime(date),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        Column(
-            horizontalAlignment = Alignment.End,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(start = 8.dp)
-        ) {
-            val amountColor = when {
+        Text(
+            text = if (amountValue != null && amountValue > 0) "+$amount" else amount,
+            style = MaterialTheme.typography.titleMedium.tabular,
+            color = when {
                 amountValue == null -> MaterialTheme.colorScheme.onSurface
-                amountValue > 0 -> if (isDarkTheme) DarkPositiveGreen else LightPositiveGreen
-                else -> if (isDarkTheme) DarkNegativeRed else LightNegativeRed
-            }
-
-            Text(
-                text = amount,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = amountColor
-            )
-        }
+                amountValue > 0 -> MaterialTheme.mrtColors.positive
+                else -> MaterialTheme.mrtColors.negative
+            },
+            modifier = Modifier.padding(start = MrtSpacing.sm),
+        )
     }
 }

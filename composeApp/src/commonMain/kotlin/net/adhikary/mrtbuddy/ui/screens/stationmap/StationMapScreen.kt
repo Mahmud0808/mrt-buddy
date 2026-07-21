@@ -21,8 +21,10 @@ import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.layout.ContentScale
 import com.github.panpf.zoomimage.CoilZoomAsyncImage
 import mrtbuddy.composeapp.generated.resources.Res
+import mrtbuddy.composeapp.generated.resources.back
 import mrtbuddy.composeapp.generated.resources.stationMap
 import net.adhikary.mrtbuddy.Language
+import net.adhikary.mrtbuddy.utils.LocalHapticManager
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.viewmodel.koinViewModel
@@ -35,15 +37,19 @@ fun StationMapScreen(
     viewModel: StationMapViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.state.collectAsState()
+    val haptics = LocalHapticManager.current
 
     Column(modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text(stringResource(Res.string.stationMap)) },
             navigationIcon = {
-                IconButton(onClick = onBack) {
+                IconButton(onClick = {
+                    haptics.tick()
+                    onBack()
+                }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back"
+                        contentDescription = stringResource(Res.string.back)
                     )
                 }
             },
@@ -61,7 +67,7 @@ fun StationMapScreen(
                 Res.getUri("files/map_bn.webp")
             },
             contentDescription = "Station Map",
-            contentScale = ContentScale.FillHeight,
+            contentScale = ContentScale.Crop,
             filterQuality = FilterQuality.High,
             scrollBar = null
         )

@@ -22,7 +22,6 @@ kotlin {
     }
 
     listOf(
-        iosX64(),
         iosArm64(),
         iosSimulatorArm64()
     ).forEach { iosTarget ->
@@ -62,11 +61,11 @@ kotlin {
             implementation(libs.koin.compose.viewmodel)
             implementation(libs.koin.compose.viewmodel.navigation)
 
-            api(libs.compose.webview.multiplatform)
-            implementation(libs.multiplatform.markdown.renderer)
-
             implementation(libs.coil.compose)
             implementation(libs.zoomimage.compose.coil3)
+            implementation(libs.backdrop)
+            implementation(libs.kyant.shapes)
+            implementation(libs.material.icons.core)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
@@ -106,7 +105,11 @@ android {
     }
     buildTypes {
         getByName("release") {
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (file("keystore.jks").exists()) {
+                signingConfigs.getByName("release")
+            } else {
+                null
+            }
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -132,7 +135,6 @@ android {
 dependencies {
     add("kspAndroid", libs.androidx.room.compiler)
     add("kspIosSimulatorArm64", libs.androidx.room.compiler)
-    add("kspIosX64", libs.androidx.room.compiler)
     add("kspIosArm64", libs.androidx.room.compiler)
     debugImplementation(compose.uiTooling)
 }
